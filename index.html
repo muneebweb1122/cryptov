@@ -180,6 +180,23 @@
   <div class="spin"></div>
 </div>
 
+<div id="credits-splash" style="position:fixed;inset:0;z-index:200;background:linear-gradient(165deg,#0A0E17,#111827);display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:24px;">
+  <div style="width:72px;height:72px;border-radius:20px;background:linear-gradient(160deg,#2F7DFF,#1554B8);display:flex;align-items:center;justify-content:center;font-size:32px;font-weight:700;color:#fff;box-shadow:0 8px 30px rgba(47,125,255,.35);margin-bottom:22px;">₮</div>
+  <div style="font-size:24px;font-weight:700;color:#fff;letter-spacing:.3px;margin-bottom:6px;">CryptoC</div>
+  <div style="font-size:13px;color:#8b93a7;margin-bottom:36px;">Personal BEP20 USDT Wallet</div>
+
+  <div style="font-size:12px;color:#5b6478;text-transform:uppercase;letter-spacing:1.5px;margin-bottom:10px;">Presented By</div>
+  <div style="font-size:19px;font-weight:600;color:#fff;margin-bottom:26px;">Muneeb Iqbal</div>
+
+  <div style="font-size:12px;color:#5b6478;text-transform:uppercase;letter-spacing:1.5px;margin-bottom:10px;">University of Swabi</div>
+
+  <div style="font-size:12px;color:#5b6478;text-transform:uppercase;letter-spacing:1.5px;margin-top:26px;margin-bottom:10px;">Project Team</div>
+  <div style="font-size:15px;color:#c7cbdb;">Masood &amp; Adnan</div>
+
+  <div style="position:absolute;bottom:36px;width:26px;height:26px;border-radius:50%;border:2.5px solid rgba(255,255,255,.15);border-top-color:#2F7DFF;animation:spin .9s linear infinite;"></div>
+</div>
+<style>@keyframes spin{to{transform:rotate(360deg);}}</style>
+
 <!-- ================= SETUP (pre-wallet) ================= -->
 <div class="setup-screen" id="setup-screen" style="display:none;">
   <div class="setup-brand">
@@ -383,9 +400,16 @@
 
   window.addEventListener("load", () => {
     setTimeout(() => {
+      const credits = $("credits-splash");
+      credits.style.transition = "opacity .6s ease";
+      credits.style.opacity = "0";
+      setTimeout(() => { credits.style.display = "none"; }, 600);
+    }, 10000);
+
+    setTimeout(() => {
       $("splash").classList.add("hide");
       $("setup-screen").style.display = "block";
-    }, 700);
+    }, 10700);
   });
 
   function switchTab(viewId){
