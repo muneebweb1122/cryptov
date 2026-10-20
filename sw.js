@@ -1,5 +1,5 @@
-const CACHE_NAME = "cryptov-v2";
-const ASSETS = ["./", "./index.html", "./manifest.json", "./icon-192.png", "./icon-512.png"];
+const CACHE_NAME = "cryptov-v5";
+const ASSETS = ["./", "./index.html", "./manifest.json", "./app.js", "./icon-192.png", "./icon-512.png"];
 
 self.addEventListener("install", (event) => {
   event.waitUntil(
