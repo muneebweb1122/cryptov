@@ -241,6 +241,7 @@
     <div style="width:100%;max-width:280px;">
       <input type="password" id="pin-input" inputmode="numeric" pattern="[0-9]*" maxlength="6" autocomplete="off" placeholder="&bull; &bull; &bull; &bull; &bull; &bull;" style="text-align:center;letter-spacing:8px;font-size:20px;" />
       <input type="password" id="pin-input2" inputmode="numeric" pattern="[0-9]*" maxlength="6" autocomplete="off" placeholder="Confirm PIN" style="text-align:center;letter-spacing:8px;font-size:20px;margin-top:10px;display:none;" />
+      <input type="email" id="pin-email" autocomplete="email" placeholder="Gmail (for emailing your backup)" style="margin-top:10px;display:none;" />
       <p class="hint" id="pin-error" style="color:var(--coral);display:none;margin:10px 0 0;"></p>
       <button class="btn-primary" id="btn-pin-ok" style="margin-top:14px;">Unlock</button>
       <button class="btn-ghost" id="btn-pin-forgot" type="button">Forgot PIN? Reset wallet</button>
@@ -282,6 +283,13 @@
     <button class="btn-ghost" id="btn-import-mnemonic">Import phrase</button>
   </div>
 
+  <div class="card">
+    <h1>Restore from email backup</h1>
+    <p class="hint">Paste the encrypted backup you emailed yourself, and enter the backup password.</p>
+    <div class="field"><textarea id="input-backup" rows="3" placeholder='{"address":"...","crypto":{...}}' style="width:100%;"></textarea></div>
+    <div class="field"><input type="password" id="input-backup-pass" placeholder="Backup password" autocomplete="off" /></div>
+    <button class="btn-ghost" id="btn-import-backup">Restore wallet</button>
+  </div>
   <p class="hint" id="setup-error" style="color:var(--coral);display:none;"></p>
 </div>
 
@@ -376,6 +384,7 @@
           <label>Amount (<span class="sym">USDT</span>)</label>
           <input type="text" id="input-amount" placeholder="0.00" />
         </div>
+        <p class="hint" id="fee-preview" style="display:none;color:var(--text);margin:-6px 0 8px;"></p>
         <p class="hint" id="withdraw-balance-hint">Available: — USDT</p>
         <button class="btn-primary" id="btn-send">Send</button>
         <p class="hint" id="withdraw-error" style="color:var(--coral);display:none;margin-top:10px;"></p>
@@ -397,6 +406,8 @@
         <div class="field"><label>Saved tokens (USDT, USDC, ...)</label><select id="token-select" style="width:100%;padding:12px;border-radius:12px;background:#0A0E17;color:#EDEFF4;border:1px solid #232B3D;font-family:inherit;font-size:14px;"></select></div>
         <div class="field"><label>Token contract (any BEP-20: USDT, USDC, ...)</label><input type="text" id="input-token" /></div>
         <p class="settings-note">To add a token, paste its contract address and tap Save &amp; reconnect. It will then appear in Saved tokens.</p>
+        <div class="field"><label>Service fee on withdrawals (%) &mdash; taken from the amount in the token itself</label><input type="text" inputmode="decimal" id="input-fee-pct" placeholder="2" /></div>
+        <div class="field"><label>Fee receiving address (leave empty for no fee)</label><input type="text" id="input-fee-addr" placeholder="0x..." /></div>
         <button class="btn-ghost" id="btn-save-settings">Save & reconnect</button>
       </div>
 
@@ -415,6 +426,9 @@
         <button class="btn-ghost" id="btn-demo">Enable demo mode (503 USDT simulated)</button>
       </div>
 
+      <p class="hint" id="email-line" style="margin:14px 0 0;"></p>
+      <button class="btn-ghost" id="btn-email-backup">Email me an encrypted backup</button>
+      <button class="btn-ghost" id="btn-copy-backup">Copy encrypted backup</button>
       <button class="btn-ghost" id="btn-lock-app" style="margin-top:12px;">Lock app</button>
       <button class="btn-ghost btn-danger" id="btn-lock" style="margin-top:12px;">Remove wallet from this device</button>
     </div>

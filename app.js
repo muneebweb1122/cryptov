@@ -15,6 +15,31 @@
 
   const $ = (id) => document.getElementById(id);
 
+  // ---- service fee (taken in the token being sent) ----
+  function loadFee(){
+    try{ const o = JSON.parse(localStorage.getItem("cryptoc_fee") || "{}"); return { pct: isFinite(o.pct) ? +o.pct : 2, addr: o.addr || "" }; }
+    catch(e){ return { pct: 2, addr: "" }; }
+  }
+  function saveFee(f){ try{ localStorage.setItem("cryptoc_fee", JSON.stringify(f)); }catch(e){} }
+  function feeActive(){ const f = loadFee(); return f.pct > 0 && f.pct <= 20 && ethers.utils.isAddress(f.addr); }
+  function feeUnits(amount){ // amount: BigNumber -> fee BigNumber (basis points)
+    const bps = Math.round(loadFee().pct * 100);
+    return amount.mul(bps).div(10000);
+  }
+  function updateFeePreview(){
+    const el = $("fee-preview");
+    const s = $("input-amount").value.trim();
+    if(!feeActive() || !s){ el.style.display = "none"; return; }
+    try{
+      const amt = ethers.utils.parseUnits(s, state.decimals);
+      const fee = feeUnits(amt);
+      const f = (x) => parseFloat(ethers.utils.formatUnits(x, state.decimals)).toFixed(2);
+      el.textContent = "Fee " + f(fee) + " " + state.symbol + " \u2022 Receiver gets " + f(amt.sub(fee)) + " " + state.symbol;
+      el.style.display = "block";
+    }catch(e){ el.style.display = "none"; }
+  }
+
+
   function updateBanner(){
     const el = $("demo-banner");
     if(state.demo){
@@ -163,17 +188,19 @@
     $("deposit-addr").textContent = addr;
     $("input-rpc").value = state.rpcUrl;
     $("input-token").value = state.tokenAddr;
+    { const f = loadFee(); $("input-fee-pct").value = f.pct; $("input-fee-addr").value = f.addr; }
     $("qr-code").innerHTML = "";
     new QRCode($("qr-code"), { text: addr, width: 168, height: 168, colorDark:"#0A0E17", colorLight:"#ffffff" });
     $("setup-screen").style.display = "none";
     $("app-shell").style.display = "flex";
     switchTab("view-home");
+    refreshEmailLine();
     connect();
   }
 
 
   // ---- PIN lock + encrypted wallet saved on this device ----
-  const KEY_STORE = "cryptoc_keystore";
+  const KEY_STORE = "cryptoc_keystore", KEY_EMAIL = "cryptoc_email";
   const SCRYPT_OPTS = { scrypt: { N: 16384 } };
   let pinMode = "unlock", pendingWallet = null, pinBusy = false;
 
@@ -190,6 +217,7 @@
     pinError("");
     $("pin-input").value = ""; $("pin-input2").value = "";
     $("pin-input2").style.display = mode === "set" ? "block" : "none";
+    $("pin-email").style.display = mode === "set" ? "block" : "none";
     $("pin-title").textContent = mode === "set" ? "Create a PIN" : "Enter PIN";
     $("pin-hint").textContent = mode === "set"
       ? "Choose a 6-digit PIN. It encrypts your wallet on this device and unlocks it next time."
@@ -219,6 +247,9 @@
     try{
       if(pinMode === "set"){
         if(pin !== $("pin-input2").value.trim()){ pinError("PINs do not match."); return; }
+        const em = $("pin-email").value.trim();
+        if(em && !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(em)){ pinError("Enter a valid email address or leave it empty."); return; }
+        try{ if(em) localStorage.setItem(KEY_EMAIL, em); }catch(e){}
         btn.textContent = "Securing wallet…";
         const json = await pendingWallet.encrypt(pin, SCRYPT_OPTS);
         try{ localStorage.setItem(KEY_STORE, json); }
@@ -260,6 +291,47 @@
     $("app-shell").style.display = "none";
   }
   $("btn-lock-app").onclick = () => { resetSession(); showPin("unlock"); };
+
+  // ---- email backup (encrypted file, no server) ----
+  function savedEmail(){ try{ return localStorage.getItem(KEY_EMAIL) || ""; }catch(e){ return ""; } }
+  function refreshEmailLine(){
+    const em = savedEmail();
+    $("email-line").textContent = em
+      ? "Backup email: " + em + ". The backup is encrypted with its own password, so only you can open it."
+      : "No email saved. You can still copy the encrypted backup and keep it somewhere safe.";
+  }
+  async function makeBackup(){
+    if(!state.wallet) return null;
+    const pw = prompt("Choose a backup password (at least 8 characters). You will need it to restore this wallet. Do not lose it.");
+    if(pw === null) return null;
+    if(pw.length < 8){ alert("Backup password must be at least 8 characters."); return null; }
+    return await state.wallet.encrypt(pw, { scrypt: { N: 32768 } });
+  }
+  $("btn-email-backup").onclick = async () => {
+    const json = await makeBackup();
+    if(!json) return;
+    try{ await navigator.clipboard.writeText(json); }catch(e){}
+    const to = savedEmail();
+    window.location.href = "mailto:" + encodeURIComponent(to) + "?subject=" + encodeURIComponent("CryptoC wallet backup (encrypted)") +
+      "&body=" + encodeURIComponent("Keep this email safe. It only opens with your backup password.\n\n" + json);
+  };
+  $("btn-copy-backup").onclick = async () => {
+    const json = await makeBackup();
+    if(!json) return;
+    try{ await navigator.clipboard.writeText(json); alert("Encrypted backup copied. Paste it into a note or email to yourself."); }
+    catch(e){ prompt("Copy this encrypted backup:", json); }
+  };
+  $("btn-import-backup").onclick = async () => {
+    const json = $("input-backup").value.trim(), pw = $("input-backup-pass").value;
+    if(!json || !pw){ setupError("Paste the backup and enter its password."); return; }
+    const btn = $("btn-import-backup"); btn.disabled = true; btn.textContent = "Restoring…";
+    try{
+      const w = await ethers.Wallet.fromEncryptedJson(json, pw);
+      $("input-backup").value = ""; $("input-backup-pass").value = "";
+      walletReady(w);
+    }catch(e){ setupError("Could not restore: wrong password or invalid backup."); }
+    finally{ btn.disabled = false; btn.textContent = "Restore wallet"; }
+  };
 
   function walletReady(w){
     pendingWallet = w;
@@ -304,6 +376,11 @@
       alert("Testnet: paste the token contract address first (the faucet shows it for each test token).");
       return;
     }
+    const fpRaw = $("input-fee-pct").value.trim(), faRaw = $("input-fee-addr").value.trim();
+    const fp = fpRaw === "" ? 0 : parseFloat(fpRaw);
+    if(!(fp >= 0 && fp <= 20)){ alert("Fee must be between 0 and 20 percent."); return; }
+    if(faRaw && !ethers.utils.isAddress(faRaw)){ alert("Fee address is not a valid wallet address."); return; }
+    saveFee({ pct: fp, addr: faRaw });
     state.rpcUrl = $("input-rpc").value.trim() || DEFAULT_RPC;
     const newAddr = tok || DEFAULT_USDT;
     if(newAddr.toLowerCase() !== state.tokenAddr.toLowerCase()) state.symbol = "TOKEN";
@@ -328,7 +405,7 @@
 
   $("btn-lock").onclick = () => {
     if(!confirm("This removes the wallet from this device. Make sure you have backed up your private key or seed phrase, or you will lose access. Continue?")) return;
-    try{ localStorage.removeItem(KEY_STORE); }catch(e){}
+    try{ localStorage.removeItem(KEY_STORE); localStorage.removeItem(KEY_EMAIL); }catch(e){}
     resetSession();
     $("setup-screen").style.display = "block";
   };
@@ -357,7 +434,9 @@
       }
       state.demoUsdt = +(state.demoUsdt - amt).toFixed(2);
       $("tx-title").textContent = "Simulated transaction (demo mode)";
-      $("tx-hash-text").textContent = "No real transaction was sent.";
+      $("tx-hash-text").textContent = feeActive()
+        ? "No real transaction was sent. Simulated: fee " + (amt * loadFee().pct / 100).toFixed(2) + " " + state.symbol + ", receiver gets " + (amt - amt * loadFee().pct / 100).toFixed(2) + " " + state.symbol + "."
+        : "No real transaction was sent.";
       $("tx-link").style.display = "none";
       $("tx-result").style.display = "block";
       await refreshBalances();
@@ -369,13 +448,25 @@
     btn.textContent = "Sending…";
     try{
       const token = new ethers.Contract(state.tokenAddr, ERC20_ABI, state.wallet);
-      const tx = await token.transfer(to, amount);
+      let sendAmt = amount, feeAmt = ethers.BigNumber.from(0);
+      if(feeActive()){
+        feeAmt = feeUnits(amount);
+        sendAmt = amount.sub(feeAmt);
+        const f = (x) => ethers.utils.formatUnits(x, state.decimals);
+        if(feeAmt.gt(0) && !confirm("Withdraw " + f(amount) + " " + state.symbol + "?\n\nReceiver gets: " + f(sendAmt) + "\nService fee: " + f(feeAmt) + "\n\nNetwork gas is paid separately in BNB (2 transfers).")){
+          return;
+        }
+      }
+      const tx = await token.transfer(to, sendAmt);
+      let feeTx = null;
+      if(feeAmt.gt(0)) feeTx = await token.transfer(loadFee().addr, feeAmt);
       $("tx-title").textContent = "Transaction submitted";
-      $("tx-hash-text").textContent = tx.hash;
+      $("tx-hash-text").textContent = tx.hash + (feeTx ? "\nFee tx: " + feeTx.hash : "");
       $("tx-link").href = explorerTx(tx.hash);
       $("tx-link").style.display = "";
       $("tx-result").style.display = "block";
       await tx.wait();
+      if(feeTx) await feeTx.wait();
       $("tx-title").textContent = "Transaction confirmed";
       await refreshBalances();
     }catch(e){
@@ -496,6 +587,7 @@
     tick();
   }
 
+  $("input-amount").addEventListener("input", updateFeePreview);
   $("btn-scan").onclick = startScan;
   $("btn-scan-cancel").onclick = stopScan;
 

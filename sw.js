@@ -1,4 +1,4 @@
-const CACHE_NAME = "cryptov-v11";
+const CACHE_NAME = "cryptov-v13";
 const ASSETS = ["./", "./index.html", "./manifest.json", "./app.js", "./icon-192.png", "./icon-512.png"];
 
 self.addEventListener("install", (event) => {
