@@ -70,7 +70,7 @@
 
     setTimeout(() => {
       $("splash").classList.add("hide");
-      $("setup-screen").style.display = "block";
+      if(hasStoredWallet()) showPin("unlock"); else $("setup-screen").style.display = "block";
     }, 10700);
   });
 
@@ -171,28 +171,119 @@
     connect();
   }
 
-  $("btn-create").onclick = () => {
-    state.wallet = ethers.Wallet.createRandom();
+
+  // ---- PIN lock + encrypted wallet saved on this device ----
+  const KEY_STORE = "cryptoc_keystore";
+  const SCRYPT_OPTS = { scrypt: { N: 16384 } };
+  let pinMode = "unlock", pendingWallet = null, pinBusy = false;
+
+  function hasStoredWallet(){
+    try{ return !!localStorage.getItem(KEY_STORE); }catch(e){ return false; }
+  }
+  function pinError(msg){
+    const el = $("pin-error");
+    el.textContent = msg || "";
+    el.style.display = msg ? "block" : "none";
+  }
+  function showPin(mode){
+    pinMode = mode;
+    pinError("");
+    $("pin-input").value = ""; $("pin-input2").value = "";
+    $("pin-input2").style.display = mode === "set" ? "block" : "none";
+    $("pin-title").textContent = mode === "set" ? "Create a PIN" : "Enter PIN";
+    $("pin-hint").textContent = mode === "set"
+      ? "Choose a 6-digit PIN. It encrypts your wallet on this device and unlocks it next time."
+      : "Enter your 6-digit PIN to open your wallet.";
+    $("btn-pin-ok").textContent = mode === "set" ? "Save PIN & open wallet" : "Unlock";
+    $("btn-pin-forgot").style.display = mode === "unlock" ? "" : "none";
+    // running trading chart in the background (clone with its own ids)
+    const bg = $("pin-bg");
+    const src = $("btc-chart");
+    if(src){
+      let svg = src.outerHTML.replace(/\bbt(A|F|Clip|M)\b/g, "bt$12").replace('id="btc-chart"', "");
+      bg.innerHTML = svg;
+      const lb = bg.querySelector(".bt-label"); if(lb) lb.remove();
+    }
+    $("pin-screen").style.display = "block";
+    setTimeout(() => $("pin-input").focus(), 50);
+  }
+  function hidePin(){ $("pin-screen").style.display = "none"; $("pin-bg").innerHTML = ""; }
+
+  $("btn-pin-ok").onclick = async () => {
+    if(pinBusy) return;
+    const pin = $("pin-input").value.trim();
+    if(!/^\d{6}$/.test(pin)){ pinError("PIN must be exactly 6 digits."); return; }
+    pinBusy = true;
+    const btn = $("btn-pin-ok"), label = btn.textContent;
+    btn.disabled = true;
+    try{
+      if(pinMode === "set"){
+        if(pin !== $("pin-input2").value.trim()){ pinError("PINs do not match."); return; }
+        btn.textContent = "Securing wallet…";
+        const json = await pendingWallet.encrypt(pin, SCRYPT_OPTS);
+        try{ localStorage.setItem(KEY_STORE, json); }
+        catch(e){ pinError("Could not save the wallet on this device (storage blocked)."); return; }
+        state.wallet = pendingWallet; pendingWallet = null;
+        hidePin();
+        loadWalletIntoUI();
+      }else{
+        btn.textContent = "Unlocking…";
+        const json = localStorage.getItem(KEY_STORE);
+        let w;
+        try{ w = await ethers.Wallet.fromEncryptedJson(json, pin); }
+        catch(e){ pinError("Wrong PIN. Try again."); $("pin-input").value = ""; return; }
+        state.wallet = w;
+        hidePin();
+        loadWalletIntoUI();
+      }
+    }finally{
+      pinBusy = false; btn.disabled = false; btn.textContent = label;
+    }
+  };
+  $("pin-input").addEventListener("keydown", e => { if(e.key === "Enter") $("btn-pin-ok").click(); });
+  $("pin-input2").addEventListener("keydown", e => { if(e.key === "Enter") $("btn-pin-ok").click(); });
+
+  $("btn-pin-forgot").onclick = () => {
+    if(!confirm("If you forgot the PIN, the only way in is to remove this wallet from the device and import it again with your private key or seed phrase. Remove it now?")) return;
+    try{ localStorage.removeItem(KEY_STORE); }catch(e){}
+    hidePin();
+    $("setup-screen").style.display = "block";
+  };
+
+  function resetSession(){
+    state.wallet = null; state.provider = null; state.demo = false; state.demoUsdt = 503;
+    state.symbol = "USDT"; state.network = "mainnet"; state.rpcUrl = DEFAULT_RPC; state.tokenAddr = DEFAULT_USDT;
+    updateSymbols(); updateBanner();
+    $("btn-demo").textContent = "Enable demo mode (503 USDT simulated)";
+    $("reveal-box").style.display = "none"; $("reveal-pk").textContent = ""; $("btn-reveal").textContent = "Show private key";
+    $("input-pk").value = ""; $("input-mnemonic").value = "";
+    $("app-shell").style.display = "none";
+  }
+  $("btn-lock-app").onclick = () => { resetSession(); showPin("unlock"); };
+
+  function walletReady(w){
+    pendingWallet = w;
     setupError("");
-    loadWalletIntoUI();
+    $("setup-screen").style.display = "none";
+    showPin("set");
+  }
+
+  $("btn-create").onclick = () => {
+    walletReady(ethers.Wallet.createRandom());
   };
 
   $("btn-import-pk").onclick = () => {
     const raw = $("input-pk").value.trim();
     try{
       const key = raw.startsWith("0x") ? raw : "0x" + raw;
-      state.wallet = new ethers.Wallet(key);
-      setupError("");
-      loadWalletIntoUI();
+      walletReady(new ethers.Wallet(key));
     }catch(e){ setupError("That doesn't look like a valid private key."); }
   };
 
   $("btn-import-mnemonic").onclick = () => {
     const phrase = $("input-mnemonic").value.trim();
     try{
-      state.wallet = ethers.Wallet.fromMnemonic(phrase);
-      setupError("");
-      loadWalletIntoUI();
+      walletReady(ethers.Wallet.fromMnemonic(phrase));
     }catch(e){ setupError("That doesn't look like a valid seed phrase."); }
   };
 
@@ -236,21 +327,9 @@
   };
 
   $("btn-lock").onclick = () => {
-    if(!confirm("This clears your wallet from this device. Make sure you've backed up your key or seed phrase. Continue?")) return;
-    state.wallet = null;
-    state.provider = null;
-    state.demo = false;
-    state.demoUsdt = 503;
-    state.symbol = "USDT";
-    updateSymbols();
-    state.network = "mainnet";
-    state.rpcUrl = DEFAULT_RPC;
-    state.tokenAddr = DEFAULT_USDT;
-    updateBanner();
-    $("btn-demo").textContent = "Enable demo mode (503 USDT simulated)";
-    $("input-pk").value = "";
-    $("input-mnemonic").value = "";
-    $("app-shell").style.display = "none";
+    if(!confirm("This removes the wallet from this device. Make sure you have backed up your private key or seed phrase, or you will lose access. Continue?")) return;
+    try{ localStorage.removeItem(KEY_STORE); }catch(e){}
+    resetSession();
     $("setup-screen").style.display = "block";
   };
 

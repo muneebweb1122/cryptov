@@ -182,7 +182,7 @@
 </div>
 
 <div id="credits-splash" style="position:fixed;inset:0;z-index:200;background:linear-gradient(165deg,#0A0E17,#111827);display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:24px;">
-  <svg id="btc-chart" viewBox="0 0 400 320" xmlns="http://www.w3.org/2000/svg" style="position:absolute;left:0;right:0;bottom:0;width:100%;height:auto;aspect-ratio:400/320;z-index:-1;pointer-events:none;">
+  <svg id="btc-chart" class="btc-chart" viewBox="0 0 400 320" xmlns="http://www.w3.org/2000/svg" style="position:absolute;left:0;right:0;bottom:0;width:100%;height:auto;aspect-ratio:400/320;z-index:-1;pointer-events:none;">
   <defs>
     <linearGradient id="btA" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#28C76F" stop-opacity=".30"/><stop offset="1" stop-color="#28C76F" stop-opacity="0"/></linearGradient>
     <linearGradient id="btF" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity="0"/><stop offset=".22" stop-color="#fff" stop-opacity="1"/></linearGradient>
@@ -220,17 +220,33 @@
 </div>
 <style>@keyframes spin{to{transform:rotate(360deg);}}</style>
 <style>@keyframes btDraw{to{stroke-dashoffset:0;}}@keyframes btFade{to{opacity:1;}}@keyframes btRise{from{opacity:0;}to{opacity:1;}}@keyframes btPulse{0%{transform:scale(1);opacity:.9;}100%{transform:scale(3.4);opacity:0;}}
-#btc-chart .bt-c{opacity:0;animation:btRise .35s ease forwards;}
-#btc-chart .bt-line{stroke-dasharray:1;stroke-dashoffset:1;animation:btDraw 9.4s linear 0.3s forwards;}
-#btc-chart .bt-area{opacity:1;}
-#btc-chart .bt-dot{opacity:0;animation:btFade .3s ease 9.700000000000001s forwards;}
-#btc-chart .bt-ring{opacity:0;transform-box:fill-box;transform-origin:center;animation:btPulse 1.4s ease-out 9.700000000000001s infinite;}
-#btc-chart .bt-label{opacity:0;animation:btFade .8s ease .3s forwards;}
+.btc-chart .bt-c{opacity:0;animation:btRise .35s ease forwards;}
+.btc-chart .bt-line{stroke-dasharray:1;stroke-dashoffset:1;animation:btDraw 9.4s linear 0.3s forwards;}
+.btc-chart .bt-area{opacity:1;}
+.btc-chart .bt-dot{opacity:0;animation:btFade .3s ease 9.700000000000001s forwards;}
+.btc-chart .bt-ring{opacity:0;transform-box:fill-box;transform-origin:center;animation:btPulse 1.4s ease-out 9.700000000000001s infinite;}
+.btc-chart .bt-label{opacity:0;animation:btFade .8s ease .3s forwards;}
 @keyframes btClip{0.00%{width:17.0px;}2.05%{width:27.6px;}4.12%{width:38.2px;}7.52%{width:48.8px;}9.60%{width:59.4px;}12.43%{width:70.0px;}15.20%{width:80.6px;}17.43%{width:91.2px;}19.46%{width:101.8px;}21.49%{width:112.4px;}23.58%{width:123.0px;}26.57%{width:133.6px;}31.90%{width:144.2px;}35.96%{width:154.8px;}38.30%{width:165.4px;}43.13%{width:176.0px;}46.57%{width:186.6px;}48.62%{width:197.2px;}50.66%{width:207.8px;}52.79%{width:218.4px;}55.51%{width:229.0px;}58.93%{width:239.6px;}60.97%{width:250.2px;}63.72%{width:260.8px;}65.76%{width:271.4px;}69.77%{width:282.0px;}72.16%{width:292.6px;}75.47%{width:303.2px;}79.91%{width:313.8px;}83.18%{width:324.4px;}87.23%{width:335.0px;}92.75%{width:345.6px;}95.73%{width:356.2px;}100.00%{width:366.8px;}}
-#btc-chart .bt-clip{width:0;animation:btClip 9.4s linear .3s forwards;}
+.btc-chart .bt-clip{width:0;animation:btClip 9.4s linear .3s forwards;}
 </style>
 
 <!-- ================= SETUP (pre-wallet) ================= -->
+<div id="pin-screen" style="display:none;position:fixed;inset:0;z-index:150;background:linear-gradient(165deg,#0A0E17,#111827);overflow:hidden;">
+  <div id="pin-bg"></div>
+  <div style="position:relative;z-index:1;min-height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px;text-align:center;">
+    <div style="width:64px;height:64px;border-radius:18px;background:linear-gradient(145deg,#2F7DFF,#1A55C8);display:flex;align-items:center;justify-content:center;font-size:30px;font-weight:700;color:#fff;box-shadow:0 0 28px rgba(47,125,255,.35);">&#8366;</div>
+    <div style="font-size:22px;font-weight:700;margin-top:12px;">CryptoC</div>
+    <div id="pin-title" style="font-size:15px;font-weight:600;margin-top:22px;">Enter PIN</div>
+    <p class="hint" id="pin-hint" style="margin:6px 0 14px;">Enter your 6-digit PIN to open your wallet.</p>
+    <div style="width:100%;max-width:280px;">
+      <input type="password" id="pin-input" inputmode="numeric" pattern="[0-9]*" maxlength="6" autocomplete="off" placeholder="&bull; &bull; &bull; &bull; &bull; &bull;" style="text-align:center;letter-spacing:8px;font-size:20px;" />
+      <input type="password" id="pin-input2" inputmode="numeric" pattern="[0-9]*" maxlength="6" autocomplete="off" placeholder="Confirm PIN" style="text-align:center;letter-spacing:8px;font-size:20px;margin-top:10px;display:none;" />
+      <p class="hint" id="pin-error" style="color:var(--coral);display:none;margin:10px 0 0;"></p>
+      <button class="btn-primary" id="btn-pin-ok" style="margin-top:14px;">Unlock</button>
+      <button class="btn-ghost" id="btn-pin-forgot" type="button">Forgot PIN? Reset wallet</button>
+    </div>
+  </div>
+</div>
 <div class="setup-screen" id="setup-screen" style="display:none;">
   <div class="setup-brand">
     <div class="mark">₮</div>
@@ -241,7 +257,7 @@
   </div>
 
   <div class="banner">
-    Runs entirely on this device. Your private key is never sent anywhere. Refreshing or closing clears it from memory — always back it up. Test with a small amount first.
+    Runs entirely on this device. Your private key is never sent anywhere. It is saved on this device encrypted with your PIN, so you stay signed in after closing the app. Always back up your key or seed phrase too, and test with a small amount first.
   </div>
 
   <div class="card">
@@ -399,7 +415,8 @@
         <button class="btn-ghost" id="btn-demo">Enable demo mode (503 USDT simulated)</button>
       </div>
 
-      <button class="btn-ghost btn-danger" id="btn-lock" style="margin-top:12px;">Lock & clear wallet</button>
+      <button class="btn-ghost" id="btn-lock-app" style="margin-top:12px;">Lock app</button>
+      <button class="btn-ghost btn-danger" id="btn-lock" style="margin-top:12px;">Remove wallet from this device</button>
     </div>
 
   </div>
