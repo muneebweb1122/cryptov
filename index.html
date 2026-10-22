@@ -19,6 +19,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/5.7.2/ethers.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jsQR/1.4.0/jsQR.min.js"></script>
 <style>
   :root{
     --ink:#0A0E17;
@@ -40,7 +41,7 @@
   html,body{margin:0;padding:0;background:var(--ink);color:var(--text);
     font-family:'Space Grotesk',system-ui,-apple-system,sans-serif;
     -webkit-font-smoothing:antialiased;overscroll-behavior:none;height:100%;}
-  body{height:100dvh;width:100%;overflow:hidden;position:fixed;inset:0;}
+  body{height:100dvh;width:100%;overflow:hidden;position:fixed;inset:0;background:var(--ink) url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA0MDAgODAwIiBwcmVzZXJ2ZUFzcGVjdFJhdGlvPSJ4TWlkWU1pZCBzbGljZSI+PGRlZnM+CjxyYWRpYWxHcmFkaWVudCBpZD0iZzEiIGN4PSI1MCUiIGN5PSIwJSIgcj0iNzUlIj48c3RvcCBvZmZzZXQ9IjAiIHN0b3AtY29sb3I9IiMyRjdERkYiIHN0b3Atb3BhY2l0eT0iLjM4Ii8+PHN0b3Agb2Zmc2V0PSIxIiBzdG9wLWNvbG9yPSIjMkY3REZGIiBzdG9wLW9wYWNpdHk9IjAiLz48L3JhZGlhbEdyYWRpZW50Pgo8cmFkaWFsR3JhZGllbnQgaWQ9ImcyIiBjeD0iODUlIiBjeT0iMTAwJSIgcj0iNzAlIj48c3RvcCBvZmZzZXQ9IjAiIHN0b3AtY29sb3I9IiMyNkExN0IiIHN0b3Atb3BhY2l0eT0iLjI2Ii8+PHN0b3Agb2Zmc2V0PSIxIiBzdG9wLWNvbG9yPSIjMjZBMTdCIiBzdG9wLW9wYWNpdHk9IjAiLz48L3JhZGlhbEdyYWRpZW50Pgo8bGluZWFyR3JhZGllbnQgaWQ9ImJhc2UiIHgxPSIwIiB5MT0iMCIgeDI9IjAiIHkyPSIxIj48c3RvcCBvZmZzZXQ9IjAiIHN0b3AtY29sb3I9IiMwQjEwMjAiLz48c3RvcCBvZmZzZXQ9IjEiIHN0b3AtY29sb3I9IiMwNzBBMTIiLz48L2xpbmVhckdyYWRpZW50Pgo8cGF0dGVybiBpZD0iZ3JpZCIgd2lkdGg9IjQwIiBoZWlnaHQ9IjQwIiBwYXR0ZXJuVW5pdHM9InVzZXJTcGFjZU9uVXNlIj48cGF0aCBkPSJNNDAgMEgwVjQwIiBmaWxsPSJub25lIiBzdHJva2U9IiMyRjdERkYiIHN0cm9rZS1vcGFjaXR5PSIuMDciIHN0cm9rZS13aWR0aD0iMSIvPjwvcGF0dGVybj4KPGxpbmVhckdyYWRpZW50IGlkPSJmYWRlIiB4MT0iMCIgeTE9IjAiIHgyPSIwIiB5Mj0iMSI+PHN0b3Agb2Zmc2V0PSIwIiBzdG9wLWNvbG9yPSIjZmZmIiBzdG9wLW9wYWNpdHk9IjAiLz48c3RvcCBvZmZzZXQ9Ii4zNSIgc3RvcC1jb2xvcj0iI2ZmZiIgc3RvcC1vcGFjaXR5PSIxIi8+PHN0b3Agb2Zmc2V0PSIxIiBzdG9wLWNvbG9yPSIjZmZmIiBzdG9wLW9wYWNpdHk9IjEiLz48L2xpbmVhckdyYWRpZW50Pgo8bWFzayBpZD0ibSI+PHJlY3Qgd2lkdGg9IjQwMCIgaGVpZ2h0PSI4MDAiIGZpbGw9InVybCgjZmFkZSkiLz48L21hc2s+CjwvZGVmcz48cmVjdCB3aWR0aD0iNDAwIiBoZWlnaHQ9IjgwMCIgZmlsbD0idXJsKCNiYXNlKSIvPjxyZWN0IHdpZHRoPSI0MDAiIGhlaWdodD0iODAwIiBmaWxsPSJ1cmwoI2dyaWQpIi8+PHJlY3Qgd2lkdGg9IjQwMCIgaGVpZ2h0PSI4MDAiIGZpbGw9InVybCgjZzEpIi8+PHJlY3Qgd2lkdGg9IjQwMCIgaGVpZ2h0PSI4MDAiIGZpbGw9InVybCgjZzIpIi8+PGcgbWFzaz0idXJsKCNtKSI+PGxpbmUgeDE9IjIxIiB5MT0iNjI3IiB4Mj0iMjEiIHkyPSI2NTgiIHN0cm9rZT0iIzI4Qzc2RiIgc3Ryb2tlLW9wYWNpdHk9Ii4zMCIgc3Ryb2tlLXdpZHRoPSIxLjUiLz48cmVjdCB4PSIxNCIgeT0iNjM3IiB3aWR0aD0iMTQiIGhlaWdodD0iMyIgcng9IjIiIGZpbGw9IiMyOEM3NkYiIGZpbGwtb3BhY2l0eT0iLjI4Ii8+PGxpbmUgeDE9IjQ3IiB5MT0iNTkxIiB4Mj0iNDciIHkyPSI2NDYiIHN0cm9rZT0iIzI4Qzc2RiIgc3Ryb2tlLW9wYWNpdHk9Ii4zMCIgc3Ryb2tlLXdpZHRoPSIxLjUiLz48cmVjdCB4PSI0MCIgeT0iNTk5IiB3aWR0aD0iMTQiIGhlaWdodD0iMzgiIHJ4PSIyIiBmaWxsPSIjMjhDNzZGIiBmaWxsLW9wYWNpdHk9Ii4yOCIvPjxsaW5lIHgxPSI3MyIgeTE9IjU5MiIgeDI9IjczIiB5Mj0iNjIzIiBzdHJva2U9IiNGRjQ3NTciIHN0cm9rZS1vcGFjaXR5PSIuMzAiIHN0cm9rZS13aWR0aD0iMS41Ii8+PHJlY3QgeD0iNjYiIHk9IjU5OSIgd2lkdGg9IjE0IiBoZWlnaHQ9IjMiIHJ4PSIyIiBmaWxsPSIjRkY0NzU3IiBmaWxsLW9wYWNpdHk9Ii4yOCIvPjxsaW5lIHgxPSI5OSIgeTE9IjU3NyIgeDI9Ijk5IiB5Mj0iNjA5IiBzdHJva2U9IiMyOEM3NkYiIHN0cm9rZS1vcGFjaXR5PSIuMzAiIHN0cm9rZS13aWR0aD0iMS41Ii8+PHJlY3QgeD0iOTIiIHk9IjU4NCIgd2lkdGg9IjE0IiBoZWlnaHQ9IjE3IiByeD0iMiIgZmlsbD0iIzI4Qzc2RiIgZmlsbC1vcGFjaXR5PSIuMjgiLz48bGluZSB4MT0iMTI1IiB5MT0iNTY1IiB4Mj0iMTI1IiB5Mj0iNjAzIiBzdHJva2U9IiNGRjQ3NTciIHN0cm9rZS1vcGFjaXR5PSIuMzAiIHN0cm9rZS13aWR0aD0iMS41Ii8+PHJlY3QgeD0iMTE4IiB5PSI1ODQiIHdpZHRoPSIxNCIgaGVpZ2h0PSIxMSIgcng9IjIiIGZpbGw9IiNGRjQ3NTciIGZpbGwtb3BhY2l0eT0iLjI4Ii8+PGxpbmUgeDE9IjE1MSIgeTE9IjU3MyIgeDI9IjE1MSIgeTI9IjYxNCIgc3Ryb2tlPSIjMjhDNzZGIiBzdHJva2Utb3BhY2l0eT0iLjMwIiBzdHJva2Utd2lkdGg9IjEuNSIvPjxyZWN0IHg9IjE0NCIgeT0iNTgxIiB3aWR0aD0iMTQiIGhlaWdodD0iMTQiIHJ4PSIyIiBmaWxsPSIjMjhDNzZGIiBmaWxsLW9wYWNpdHk9Ii4yOCIvPjxsaW5lIHgxPSIxNzciIHkxPSI1MzUiIHgyPSIxNzciIHkyPSI1OTQiIHN0cm9rZT0iIzI4Qzc2RiIgc3Ryb2tlLW9wYWNpdHk9Ii4zMCIgc3Ryb2tlLXdpZHRoPSIxLjUiLz48cmVjdCB4PSIxNzAiIHk9IjU0NCIgd2lkdGg9IjE0IiBoZWlnaHQ9IjM3IiByeD0iMiIgZmlsbD0iIzI4Qzc2RiIgZmlsbC1vcGFjaXR5PSIuMjgiLz48bGluZSB4MT0iMjAzIiB5MT0iNDg5IiB4Mj0iMjAzIiB5Mj0iNTUxIiBzdHJva2U9IiMyOEM3NkYiIHN0cm9rZS1vcGFjaXR5PSIuMzAiIHN0cm9rZS13aWR0aD0iMS41Ii8+PHJlY3QgeD0iMTk2IiB5PSI1MDciIHdpZHRoPSIxNCIgaGVpZ2h0PSIzNyIgcng9IjIiIGZpbGw9IiMyOEM3NkYiIGZpbGwtb3BhY2l0eT0iLjI4Ii8+PGxpbmUgeDE9IjIyOSIgeTE9IjQ4NCIgeDI9IjIyOSIgeTI9IjUxNyIgc3Ryb2tlPSIjMjhDNzZGIiBzdHJva2Utb3BhY2l0eT0iLjMwIiBzdHJva2Utd2lkdGg9IjEuNSIvPjxyZWN0IHg9IjIyMiIgeT0iNDkxIiB3aWR0aD0iMTQiIGhlaWdodD0iMTYiIHJ4PSIyIiBmaWxsPSIjMjhDNzZGIiBmaWxsLW9wYWNpdHk9Ii4yOCIvPjxsaW5lIHgxPSIyNTUiIHkxPSI0NjUiIHgyPSIyNTUiIHkyPSI1MDEiIHN0cm9rZT0iIzI4Qzc2RiIgc3Ryb2tlLW9wYWNpdHk9Ii4zMCIgc3Ryb2tlLXdpZHRoPSIxLjUiLz48cmVjdCB4PSIyNDgiIHk9IjQ4NCIgd2lkdGg9IjE0IiBoZWlnaHQ9IjciIHJ4PSIyIiBmaWxsPSIjMjhDNzZGIiBmaWxsLW9wYWNpdHk9Ii4yOCIvPjxsaW5lIHgxPSIyODEiIHkxPSI0NDAiIHgyPSIyODEiIHkyPSI0OTUiIHN0cm9rZT0iIzI4Qzc2RiIgc3Ryb2tlLW9wYWNpdHk9Ii4zMCIgc3Ryb2tlLXdpZHRoPSIxLjUiLz48cmVjdCB4PSIyNzQiIHk9IjQ1NSIgd2lkdGg9IjE0IiBoZWlnaHQ9IjI5IiByeD0iMiIgZmlsbD0iIzI4Qzc2RiIgZmlsbC1vcGFjaXR5PSIuMjgiLz48bGluZSB4MT0iMzA3IiB5MT0iNDEyIiB4Mj0iMzA3IiB5Mj0iNDcyIiBzdHJva2U9IiMyOEM3NkYiIHN0cm9rZS1vcGFjaXR5PSIuMzAiIHN0cm9rZS13aWR0aD0iMS41Ii8+PHJlY3QgeD0iMzAwIiB5PSI0MjQiIHdpZHRoPSIxNCIgaGVpZ2h0PSIzMSIgcng9IjIiIGZpbGw9IiMyOEM3NkYiIGZpbGwtb3BhY2l0eT0iLjI4Ii8+PGxpbmUgeDE9IjMzMyIgeTE9IjM4NCIgeDI9IjMzMyIgeTI9IjQzMSIgc3Ryb2tlPSIjMjhDNzZGIiBzdHJva2Utb3BhY2l0eT0iLjMwIiBzdHJva2Utd2lkdGg9IjEuNSIvPjxyZWN0IHg9IjMyNiIgeT0iMzkyIiB3aWR0aD0iMTQiIGhlaWdodD0iMzIiIHJ4PSIyIiBmaWxsPSIjMjhDNzZGIiBmaWxsLW9wYWNpdHk9Ii4yOCIvPjxsaW5lIHgxPSIzNTkiIHkxPSIzNTMiIHgyPSIzNTkiIHkyPSI0MTEiIHN0cm9rZT0iIzI4Qzc2RiIgc3Ryb2tlLW9wYWNpdHk9Ii4zMCIgc3Ryb2tlLXdpZHRoPSIxLjUiLz48cmVjdCB4PSIzNTIiIHk9IjM3NCIgd2lkdGg9IjE0IiBoZWlnaHQ9IjE4IiByeD0iMiIgZmlsbD0iIzI4Qzc2RiIgZmlsbC1vcGFjaXR5PSIuMjgiLz48bGluZSB4MT0iMzg1IiB5MT0iMzUwIiB4Mj0iMzg1IiB5Mj0iMzk0IiBzdHJva2U9IiMyOEM3NkYiIHN0cm9rZS1vcGFjaXR5PSIuMzAiIHN0cm9rZS13aWR0aD0iMS41Ii8+PHJlY3QgeD0iMzc4IiB5PSIzNzAiIHdpZHRoPSIxNCIgaGVpZ2h0PSI0IiByeD0iMiIgZmlsbD0iIzI4Qzc2RiIgZmlsbC1vcGFjaXR5PSIuMjgiLz48cG9seWxpbmUgcG9pbnRzPSIyMSw2MzcgNDcsNTk5IDczLDYwMSA5OSw1ODQgMTI1LDU5NSAxNTEsNTgxIDE3Nyw1NDQgMjAzLDUwNyAyMjksNDkxIDI1NSw0ODQgMjgxLDQ1NSAzMDcsNDI0IDMzMywzOTIgMzU5LDM3NCAzODUsMzcwIiBmaWxsPSJub25lIiBzdHJva2U9IiMyRjdERkYiIHN0cm9rZS1vcGFjaXR5PSIuNTUiIHN0cm9rZS13aWR0aD0iMi4yIiBzdHJva2UtbGluZWpvaW49InJvdW5kIiBzdHJva2UtbGluZWNhcD0icm91bmQiLz48L2c+PC9zdmc+') center/cover no-repeat;}
   .mono{font-family:'IBM Plex Mono',monospace;}
   svg{display:block;}
 
@@ -57,12 +58,12 @@
     animation:spin .8s linear infinite;}
   @keyframes spin{to{transform:rotate(360deg);}}
 
-  .app{position:relative;height:100%;width:100%;max-width:480px;margin:0 auto;background:var(--ink);
+  .app{position:relative;height:100%;width:100%;max-width:480px;margin:0 auto;background:transparent;
     display:flex;flex-direction:column;}
 
   .topbar{position:absolute;top:0;left:0;right:0;height:var(--topbar-h);z-index:20;
     display:flex;align-items:flex-end;padding:0 18px 10px;
-    background:linear-gradient(to bottom, var(--ink) 75%, rgba(10,14,23,0));
+    background:rgba(10,14,23,.55);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);
   }
   .topbar .brand{display:flex;align-items:center;gap:9px;}
   .topbar .mark{width:26px;height:26px;border-radius:8px;background:linear-gradient(160deg,var(--accent),#1554B8);
@@ -99,7 +100,7 @@
   .setup-brand .name{font-weight:600;font-size:17px;}
   .setup-brand .sub{font-size:11px;color:var(--text-dim);margin-top:1px;}
 
-  .card{background:var(--panel);border:1px solid var(--hairline);border-radius:var(--radius);padding:20px;position:relative;overflow:hidden;}
+  .card{background:rgba(19,24,38,.82);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);border:1px solid var(--hairline);border-radius:var(--radius);padding:20px;position:relative;overflow:hidden;}
   .card + .card{margin-top:12px;}
   .stamp{position:absolute;top:0;right:0;width:46px;height:46px;
     background:repeating-linear-gradient(135deg,var(--hairline) 0 2px,transparent 2px 8px);
@@ -260,7 +261,7 @@
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"/><circle cx="12" cy="12" r="3"/></svg>
           </button>
         </div>
-        <div class="amount"><span id="bal-usdt">0.00</span><span>USDT</span></div>
+        <div class="amount"><span id="bal-usdt">0.00</span><span class="sym">USDT</span></div>
         <div class="sub-amount"><span id="bal-bnb">0.0000</span> BNB reserved for gas</div>
       </div>
 
@@ -283,7 +284,7 @@
         <h2 style="margin-bottom:8px;">Assets</h2>
         <div class="asset-row">
           <div class="badge">₮</div>
-          <div class="meta"><div class="n">USDT</div><div class="s">BNB Smart Chain</div></div>
+          <div class="meta"><div class="n sym">USDT</div><div class="s">BNB Smart Chain</div></div>
           <div class="val" id="bal-usdt-2">0.00</div>
         </div>
         <div class="asset-row">
@@ -305,8 +306,8 @@
     <!-- DEPOSIT -->
     <div class="view" id="view-deposit">
       <div class="card">
-        <h1>Deposit USDT</h1>
-        <p class="hint">Send BEP20 (BSC) USDT only to this address. Sending on another network will permanently lose the funds.</p>
+        <h1>Deposit <span class="sym">USDT</span></h1>
+        <p class="hint">Send BEP20 (BSC) <span class="sym">USDT</span> only to this address. Sending on another network will permanently lose the funds.</p>
         <div class="qr-wrap"><div id="qr-code"></div></div>
         <div class="addr-row">
           <span class="addr" id="deposit-addr">—</span>
@@ -318,13 +319,13 @@
     <!-- WITHDRAW -->
     <div class="view" id="view-withdraw">
       <div class="card">
-        <h1>Withdraw USDT</h1>
+        <h1>Withdraw <span class="sym">USDT</span></h1>
         <div class="field">
           <label>Recipient address (BEP20)</label>
-          <input type="text" id="input-to" placeholder="0x..." />
+          <div style="display:flex;gap:8px;align-items:stretch;"><input type="text" id="input-to" placeholder="0x..." style="flex:1;min-width:0;" /><button class="btn-ghost" id="btn-scan" type="button" style="width:auto;margin-top:0;padding:0 14px;white-space:nowrap;">Scan QR</button></div>
         </div>
         <div class="field">
-          <label>Amount (USDT)</label>
+          <label>Amount (<span class="sym">USDT</span>)</label>
           <input type="text" id="input-amount" placeholder="0.00" />
         </div>
         <p class="hint" id="withdraw-balance-hint">Available: — USDT</p>
@@ -345,7 +346,9 @@
         <p class="settings-note">RPC endpoint and token contract, for testnet or custom networks.</p>
         <div style="display:flex;gap:8px;margin-bottom:12px;"><button class="btn-ghost" id="btn-net-main">Mainnet</button><button class="btn-ghost" id="btn-net-test">Testnet</button></div>
         <div class="field"><label>RPC URL</label><input type="text" id="input-rpc" /></div>
-        <div class="field"><label>USDT (BEP20) contract</label><input type="text" id="input-token" /></div>
+        <div class="field"><label>Saved tokens (USDT, USDC, ...)</label><select id="token-select" style="width:100%;padding:12px;border-radius:12px;background:#0A0E17;color:#EDEFF4;border:1px solid #232B3D;font-family:inherit;font-size:14px;"></select></div>
+        <div class="field"><label>Token contract (any BEP-20: USDT, USDC, ...)</label><input type="text" id="input-token" /></div>
+        <p class="settings-note">To add a token, paste its contract address and tap Save &amp; reconnect. It will then appear in Saved tokens.</p>
         <button class="btn-ghost" id="btn-save-settings">Save & reconnect</button>
       </div>
 
@@ -388,6 +391,15 @@
     </button>
   </div>
 
+</div>
+
+<div id="scan-modal" style="display:none;position:fixed;inset:0;z-index:300;background:rgba(5,8,15,.94);flex-direction:column;align-items:center;justify-content:center;padding:20px;gap:14px;">
+  <div style="font-size:16px;font-weight:600;color:#fff;">Scan recipient QR code</div>
+  <div style="position:relative;width:100%;max-width:340px;aspect-ratio:1/1;border-radius:18px;overflow:hidden;border:2px solid #2F7DFF;background:#000;">
+    <video id="scan-video" playsinline muted style="width:100%;height:100%;object-fit:cover;"></video>
+  </div>
+  <div id="scan-hint" style="font-size:12.5px;color:#8b93a7;text-align:center;max-width:320px;">Point the camera at the QR code on the other wallet's Deposit screen.</div>
+  <button id="btn-scan-cancel" type="button" style="background:transparent;border:1px solid #232B3D;color:#EDEFF4;border-radius:14px;padding:12px 28px;font-size:14px;">Cancel</button>
 </div>
 
 <script src="./app.js"></script>
